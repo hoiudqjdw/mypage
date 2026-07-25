@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projects Portfolio</title>
+  <style>
+    :root {
+      --bg-color: #f8f9fa;
+      --card-bg: #ffffff;
+      --text-main: #212529;
+      --text-muted: #6c757d;
+      --accent-color: #0969da;
+      --border-color: #e9ecef;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 2.5rem;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+    }
+
+    .status-msg {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    .repo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      box-shadow: var(--shadow);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+      border-color: var(--accent-color);
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--accent-color);
+      margin-bottom: 0.75rem;
+      word-break: break-word;
+    }
+
+    .card-description {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      flex-grow: 1;
+      margin-bottom: 1rem;
+    }
+
+    .card-footer {
+      font-size: 0.85rem;
+      color: var(--accent-color);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Projects</h1>
+      <p>hoiudqjdw의 공개 저장소 목록입니다.</p>
+    </header>
+
+    <div id="status" class="status-msg">저장소 목록을 불러오는 중...</div>
+    <div id="repo-grid" class="repo-grid"></div>
+  </div>
+
+  <script>
+    const USERNAME = 'hoiudqjdw';
+    const EXCLUDE_REPO = `${USERNAME}.github.io`.toLowerCase(); // 포트폴리오 저장소 제외
+
+    async function fetchRepositories() {
+      const statusEl = document.getElementById('status');
+      const gridEl = document.getElementById('repo-grid');
+
+      try {
+        const response = await fetch(`https://api.github.com/users/${USERNAME}/repos?sort=updated`);
+        
+        if (!response.ok) {
+          throw new Error(`GitHub API 오류 (${response.status})`);
+        }
+
+        const repos = await response.json();
+
+        // 포트폴리오 저장소 제외 처리
+        const filteredRepos = repos.filter(
+          repo => repo.name.toLowerCase() !== EXCLUDE_REPO
+        );
+
+        statusEl.style.display = 'none';
+
+        if (filteredRepos.length === 0) {
+          statusEl.textContent = '표시할 공개 저장소가 없습니다.';
+          statusEl.style.display = 'block';
+          return;
+        }
+
+        filteredRepos.forEach(repo => {
+          const card = document.createElement('a');
+          card.className = 'card';
+          
+          // 요청하신 경로: USERNAME.github.io/저장소이름/
+          card.href = `https://${USERNAME}.github.io/${repo.name}/`;
+          card.target = '_blank';
+          card.rel = 'noopener noreferrer';
+
+          const title = document.createElement('h2');
+          title.className = 'card-title';
+          title.textContent = repo.name;
+
+          const desc = document.createElement('p');
+          desc.className = 'card-description';
+          desc.textContent = repo.description || '설명이 없습니다.';
+
+          const footer = document.createElement('div');
+          footer.className = 'card-footer';
+          footer.innerHTML = '바로가기 &rarr;';
+
+          card.appendChild(title);
+          card.appendChild(desc);
+          card.appendChild(footer);
+
+          gridEl.appendChild(card);
+        });
+
+      } catch (error) {
+        statusEl.textContent = `저장소를 불러오는 데 실패했습니다: ${error.message}`;
+      }
+    }
+
+    fetchRepositories();
+  </script>
+</body>
+</html>
